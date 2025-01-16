@@ -1,0 +1,78 @@
+name: Linux
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *' # build at least once a month
+
+env:
+  artifactPackage: MapLibreQtProject-x86_64.AppImage
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        BuildType: [Debug, Release]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build docker images
+        run: docker compose build
+      - name: Configure
+        run: BUILD_TYPE=${{ matrix.BuildType }} docker compose run --rm configure
+      - name: Build
+        run: BUILD_TYPE=${{ matrix.BuildType }} docker compose run --rm build
+      - name: Package
+        run: BUILD_TYPE=${{ matrix.BuildType }} docker compose run --rm package
+      - name: Cache Artifact
+        uses: actions/cache@v4
+        with:
+          path: ./build/${{ matrix.BuildType }}/
+          key: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.BuildType }}
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Package-${{ matrix.BuildType }}
+          path: ./build/${{ matrix.BuildType }}/${{ env.artifactPackage }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Build docker images
+        run: docker compose build
+      - name: Get Cached Artifact
+        uses: actions/cache@v4
+        with:
+          path: ./build/Debug/
+          key: ${{ github.run_id }}-${{ github.run_attempt }}-Debug
+      - name: Test
+        run: BUILD_TYPE=Debug docker compose run test
+
+  release:
+    needs: test
+    if: needs.test.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Cached Artifact
+        uses: actions/cache@v4
+        with:
+          path: ./build/Release/
+          key: ${{ github.run_id }}-${{ github.run_attempt }}-Release
+      - name: Create Version Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/Release/${{ env.artifactPackage }}
+      - name: Create Continuous Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/Release/${{ env.artifactPackage }}
+          tag_name: continuous-build
