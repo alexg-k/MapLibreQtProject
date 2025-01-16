@@ -1,0 +1,39 @@
+name: maplibreqtproject
+
+services:
+  configure:
+    image: maplibreqtproject
+    build: 
+      context: .
+      args:
+        BUILD_TYPE: Release
+    volumes:
+      - ./:/project
+    command: cmake --fresh -S . -B build/${BUILD_TYPE} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+  build:
+    image: maplibreqtproject
+    build: 
+      context: .
+      args:
+        BUILD_TYPE: Release
+    volumes:
+      - ./:/project
+    command: cmake --build build/${BUILD_TYPE} --target all --config ${BUILD_TYPE}
+  package:
+    image: maplibreqtproject
+    build: 
+      context: .
+      args:
+        BUILD_TYPE: Release
+    volumes:
+      - ./:/project
+    command: bash -c "NO_STRIP=true DESTDIR=/project/build/${BUILD_TYPE}/AppDir cmake --build build/${BUILD_TYPE} --target install"
+  test:
+    image: maplibreqtproject
+    build: 
+      context: .
+      args:
+        BUILD_TYPE: Debug
+    volumes:
+      - ./:/project
+    command: ctest --test-dir build/${BUILD_TYPE} --output-on-failure --verbose
