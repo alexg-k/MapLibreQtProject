@@ -1,24 +1,25 @@
+#include <iostream>
 #include "VehicleModel.hpp"
 #include <QGeoCoordinate>
 
 VehicleModel::VehicleModel(QObject* parent)
     : QAbstractListModel(parent)
 {
-    vehicles.emplace_back("Test");
-    vehicles.back().setPosition(54.474167, 9.837778);
+    addVehicle("Test");
+    vehicles.at("Test").setPosition(54.474167, 9.837778);
 }
 
 VehicleModel::~VehicleModel() {}
 
-void VehicleModel::addVehicle(const std::string& name)
+void VehicleModel::addVehicle(const QString &name)
 {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    vehicles.emplace(name, name);
+    vehicles.emplace(name, name.toStdString());
     endInsertRows();
     emit sizeChanged(vehicles.size());
 }
 
-void VehicleModel::removeVehicle(const std::string& name)
+void VehicleModel::removeVehicle(const QString &name)
 {
     for (auto it = vehicles.begin(); it != vehicles.end(); it++)
     {
@@ -33,12 +34,12 @@ void VehicleModel::removeVehicle(const std::string& name)
     }
 }
 
-Vehicle& VehicleModel::getVehicle(const std::string& name)
+Vehicle &VehicleModel::getVehicle(const QString &name)
 {
     return vehicles.at(name);
 }
 
-int VehicleModel::rowCount(const QModelIndex& parent) const
+int VehicleModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
@@ -46,7 +47,7 @@ int VehicleModel::rowCount(const QModelIndex& parent) const
     return vehicles.size();
 }
 
-QVariant VehicleModel::data(const QModelIndex& index, int role) const
+QVariant VehicleModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();

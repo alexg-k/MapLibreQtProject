@@ -10,16 +10,14 @@ import VehicleModel 1.0
 
 ApplicationWindow {
     id: mainWindow
-    width: Qt.platform.os == "android" ? Screen.width : 640
-    height: Qt.platform.os == "android" ? Screen.height : 640
+    width: Qt.platform.os == "android" ? Screen.width : 1600
+    height: Qt.platform.os == "android" ? Screen.height : 1200
     visible: true
     title: "MapLibreQtProject"
-
     MapView {
         id: mapview
         anchors.fill: parent
-
-        map.zoomLevel: 5
+        map.zoomLevel: 10
         map.center: QtPositioning.coordinate(54.474167, 9.837778)
         map.plugin: Plugin {
             name: "maplibre"
@@ -28,48 +26,34 @@ ApplicationWindow {
                 value: "https://demotiles.maplibre.org/style.json"
             }
         }
-
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.CrossCursor
         }
-
         MapItemView {
             parent: mapview.map
-            model: VehicleModel {}
-            delegate: vehicleDelegate
-        }
-        Component {
-            id: vehicleDelegate
-            MapCircle {
+            model: vehicleModel
+            delegate: MapCircle {
                 center: model.position
-                radius: 5000.0
+                radius: 500.0
                 color: 'green'
                 border.width: 3
+                TapHandler {
+                    id: tapHandlerRight
+                    acceptedButtons: Qt.RightButton
+                    gesturePolicy: TapHandler.WithinBounds
+                    onTapped: {
+                        vehicleModel.removeVehicle(model.name);
+                    }
+                }
             }
-            //MapQuickItem {
-            //    coordinate: vehicle.position
-            //    anchorPoint: image.center
-            //    smooth: true
-            //    opacity: 0.8
-            //    sourceItem: Image {
-            //        Image { id: image; source: "uxv.svg" }
-            //        Text { text: vehicle.name; font.bold: true }
-            //    }
-            //}
-            //MouseArea {
-            //    id: mouseArea
-            //    anchors.fill: parent
-            //    hoverEnabled: true
-            //    drag.target: parent
-
-            //    //onClicked: {
-            //    //    vehicle.clicked(name);
-            //    //}
-            //}
+        }
+        TapHandler {
+            id: tapHandlerLeft
+            //gesturePolicy: TapHandler.WithinBounds
+            onTapped: {
+                vehicleModel.addVehicle("Test2");
+            }
         }
     }
-    //Component.onCompleted: {
-    //    VehicleModel.test();
-    //}
 }

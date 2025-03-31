@@ -1,5 +1,5 @@
-#ifndef VEHICLE_MANAGER_HPP
-#define VEHICLE_MANAGER_HPP 
+#ifndef VEHICLE_MODEL_HPP
+#define VEHICLE_MODEL_HPP 
 
 #include <map>
 #include <QAbstractListModel>
@@ -8,23 +8,23 @@
 class VehicleModel : public QAbstractListModel
 {
     Q_OBJECT
+    //Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     explicit VehicleModel(QObject *parent = nullptr);
     ~VehicleModel();
-    void addVehicle(const std::string &name);
-    void removeVehicle(const std::string &name);
-    Vehicle& getVehicle(const std::string &name);
+    Vehicle &getVehicle(const QString &name);
     enum {
         NameRole = Qt::UserRole,
-        PositionRole = Qt::UserRole + 1
+        PositionRole = Qt::UserRole + 1,
     };
 
 signals:
     void sizeChanged(int size);
 
-public slots:
-    void test();
+public:
+    Q_INVOKABLE void addVehicle(const QString &name);
+    Q_INVOKABLE void removeVehicle(const QString &name);
 
 public:
     //QListModel
@@ -33,7 +33,7 @@ public:
     virtual QHash<int, QByteArray> roleNames() const override;
 
 private:
-    std::map<std::string /*name*/, Vehicle> vehicles;
+    std::map<QString /*name*/, Vehicle> vehicles;
 };
 
 #endif // VEHICLE_MODEL_HPP
