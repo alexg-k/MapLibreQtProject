@@ -30,6 +30,12 @@ set(QT_PLUGIN_PATH "/usr/local/plugins")
 
 ## TARGETS
 qt_add_executable(${CMAKE_PROJECT_NAME})
+qt_add_resources(${CMAKE_PROJECT_NAME} "my_resources"
+    PREFIX "/"
+    FILES
+        src/main.qml
+        res/icons/uxv.svg
+)
 add_subdirectory(src/)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Quick Qt6::Location Qt6::Positioning QMapLibre::Location)
