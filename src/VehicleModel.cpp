@@ -7,6 +7,7 @@ VehicleModel::VehicleModel(QObject* parent)
 {
     addVehicle("Test");
     vehicles.at("Test").setPosition(54.474167, 9.837778);
+    vehicles.at("Test").setHeading(1.0);
 }
 
 VehicleModel::~VehicleModel() {}
@@ -32,6 +33,11 @@ void VehicleModel::removeVehicle(const QString &name)
             break;
         }
     }
+}
+
+void VehicleModel::setPosition(const QString &name, const QGeoCoordinate &coord)
+{
+    vehicles.at(name).setPosition(coord.latitude(), coord.longitude());
 }
 
 Vehicle &VehicleModel::getVehicle(const QString &name)
@@ -62,6 +68,8 @@ QVariant VehicleModel::data(const QModelIndex &index, int role) const
             return QString::fromStdString(it->second.getName());
         case PositionRole:
             return QVariant::fromValue(QGeoCoordinate(std::get<0>(it->second.getPosition()), std::get<1>(it->second.getPosition())));
+        case HeadingRole:
+            return 180.0 / M_PI * it->second.getHeading();
         }
     }
     return QVariant();
@@ -72,5 +80,6 @@ QHash<int, QByteArray> VehicleModel::roleNames() const
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
     roles[PositionRole] = "position";
+    roles[HeadingRole] = "heading";
     return roles;
 }

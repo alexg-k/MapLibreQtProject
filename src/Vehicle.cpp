@@ -21,3 +21,13 @@ void Vehicle::setPosition(const double latitude, const double longitude)
 {
     position = std::make_pair(latitude, longitude);
 }
+
+const double Vehicle::getHeading() const
+{
+    return heading;
+}
+
+void Vehicle::setHeading(const double heading)
+{
+    this->heading = heading;
+}

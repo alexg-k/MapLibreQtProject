@@ -3,6 +3,7 @@
 
 #include <map>
 #include <QAbstractListModel>
+#include <QGeoCoordinate>
 #include "Vehicle.hpp"
 
 class VehicleModel : public QAbstractListModel
@@ -17,6 +18,7 @@ public:
     enum {
         NameRole = Qt::UserRole,
         PositionRole = Qt::UserRole + 1,
+        HeadingRole = Qt::UserRole + 2,
     };
 
 signals:
@@ -25,6 +27,7 @@ signals:
 public:
     Q_INVOKABLE void addVehicle(const QString &name);
     Q_INVOKABLE void removeVehicle(const QString &name);
+    Q_INVOKABLE void setPosition(const QString &name, const QGeoCoordinate &coord);
 
 public:
     //QListModel
