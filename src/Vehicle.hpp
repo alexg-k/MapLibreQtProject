@@ -3,21 +3,30 @@
 
 #include <string>
 #include <utility>
+#include <thread>
+
+#include "Coordinate.hpp"
 
 class Vehicle
 {
 
 private:
     std::string name;
-    std::pair<double, double> position;
+    Coordinate position;
+    double heading;
+    std::thread t;
+    bool moving;
 
 public:
     Vehicle(const std::string &name);
     ~Vehicle();
     const std::string& getName() const;
-    const std::pair<double, double> getPosition() const;
-    void setPosition(const double latitude, const double longitude);
-    //void run();
-    //void stop();
+    const Coordinate getPosition() const;
+    void setPosition(const Coordinate coord);
+    const double getHeading() const;
+    void setHeading(const double heading);
+    void move();
+    void stop();
+    bool isActive();
 };
 #endif // VEHICLE_HPP

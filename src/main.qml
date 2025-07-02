@@ -14,46 +14,88 @@ ApplicationWindow {
     height: Qt.platform.os == "android" ? Screen.height : 1200
     visible: true
     title: "MapLibreQtProject"
-    MapView {
-        id: mapview
+    property int vehiclesAdded: 0
+    Map {
+        id: map
         anchors.fill: parent
-        map.zoomLevel: 10
-        map.center: QtPositioning.coordinate(54.474167, 9.837778)
-        map.plugin: Plugin {
+        zoomLevel: 10
+        center: QtPositioning.coordinate(54.474167, 9.837778)
+        plugin: Plugin {
             name: "maplibre"
             PluginParameter {
                 name: "maplibre.map.styles"
                 value: "https://demotiles.maplibre.org/style.json"
             }
         }
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.CrossCursor
+        Text {
+            text: "Connected Vehicles: " + vehicleModel.count
+            anchors.top: parent.top
+            anchors.left: parent.left
+            padding: 10
         }
         MapItemView {
             parent: mapview.map
             model: vehicleModel
-            delegate: MapCircle {
-                center: model.position
-                radius: 500.0
-                color: 'green'
-                border.width: 3
+            delegate: MapQuickItem {
+                anchorPoint.x: image.width/2
+                anchorPoint.y: image.height/2
+                coordinate: model.position
+                sourceItem: Row {
+                    Image {
+                        id: image
+                        source: "qrc:/res/icons/uxv.svg"
+                        rotation: model.heading
+                        width: 32
+                        height: 32
+                    }
+                    Text {
+                        text: model.name
+                    }
+                }
                 TapHandler {
-                    id: tapHandlerRight
+                    id: tapHandlerVehicleLeft
+                    acceptedButtons: Qt.LeftButton
+                    gesturePolicy: TapHandler.WithinBounds
+                    onTapped: {
+                        console.log("Left tapped the vehicle: ", model.name);
+                        vehicleModel.toggleActive(index);
+                    }
+                }
+                TapHandler {
+                    id: tapHandlerVehicleRight
                     acceptedButtons: Qt.RightButton
                     gesturePolicy: TapHandler.WithinBounds
                     onTapped: {
-                        vehicleModel.removeVehicle(model.name);
+                        console.log("Right tapped the vehicle:", model.name);
+                        vehicleModel.removeVehicle(index);
                     }
                 }
             }
         }
         TapHandler {
-            id: tapHandlerLeft
-            //gesturePolicy: TapHandler.WithinBounds
-            onTapped: {
-                vehicleModel.addVehicle("Test2");
+            id: tapHandlerMapLeft
+            gesturePolicy: TapHandler.WithinBounds
+            onTapped: (eventPoint) => {
+                let coord = map.toCoordinate(eventPoint.position);
+                console.log("Tapped map at:", coord.latitude, coord.longitude);
+                vehicleModel.addVehicle("Name" + vehiclesAdded++, coord);
             }
+        }
+        HoverHandler {
+            cursorShape: Qt.CrossCursor
+        }
+        WheelHandler {
+            id: wheel
+            acceptedDevices: Qt.platform.pluginName === "cocoa" || Qt.platform.pluginName === "wayland"
+            ? PointerDevice.Mouse | PointerDevice.TouchPad
+            : PointerDevice.Mouse
+            rotationScale: 1/120
+            property: "zoomLevel"
+        }
+        DragHandler {
+            id: drag
+            target: null
+            onTranslationChanged: (delta) => map.pan(-delta.x, -delta.y)
         }
     }
 }

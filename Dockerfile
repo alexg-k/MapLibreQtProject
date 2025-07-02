@@ -136,6 +136,8 @@ RUN git clone https://github.com/AppImage/appimagetool && \
     cmake --install build && \
     cd / && rm -rf appimagetool
 
+RUN apt install -y gdb
+
 RUN apt-get clean
 USER $USERNAME
 WORKDIR /project
