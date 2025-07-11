@@ -37,3 +37,13 @@ services:
     volumes:
       - ./:/project
     command: ctest --test-dir build/${BUILD_TYPE} --output-on-failure --verbose
+  dev:
+    image: maplibreqtproject
+    build: 
+      context: .
+      args:
+        BUILD_TYPE: Debug
+    volumes:
+      - ./:/project
+    stdin_open: true
+    tty: true

@@ -1,12 +1,12 @@
-FROM debian:bookworm
-ARG USERNAME=username
+FROM debian:trixie
+ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
-ARG QT_VERSION=6.8.1
+ARG QT_VERSION=6.9.0
 ARG QT_PATH=/opt/Qt
 
 # Install system packages
-RUN export DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     locales \
     patchelf \
@@ -16,7 +16,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     git \
     build-essential \
     cmake  \
-    vim
+    # neovim \
+    tmux
 
 # Create user
 RUN groupadd --gid $USER_GID $USERNAME && \
@@ -89,6 +90,7 @@ RUN git clone https://github.com/maplibre/maplibre-native-qt.git && \
     git submodule update --init --recursive
 # workaround: remove tests while building
 RUN sed -i '217,220d' /maplibre-native-qt/cmake/presets/Linux.json 
+RUN sed -i 's/3.5.1/3.10/' /maplibre-native-qt/vendor/maplibre-native/vendor/mapbox-base/CMakeLists.txt 
 RUN cd /maplibre-native-qt && cmake --workflow --preset Linux-ccache
 RUN cd /build/qt6-Linux/ && ninja install
 
@@ -136,10 +138,29 @@ RUN git clone https://github.com/AppImage/appimagetool && \
     cmake --install build && \
     cd / && rm -rf appimagetool
 
-RUN apt install -y gdb
+# install neovim from source because apt version throws errors with modern plugins
+RUN apt install -y make gcc ripgrep unzip git xclip curl nodejs && \
+    curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
+    mkdir -p /opt/nvim-linux-x86_64 && \
+    chmod a+rX /opt/nvim-linux-x86_64 && \
+    tar -C /opt -xzf nvim-linux-x86_64.tar.gz && \
+    ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/ && \
+    rm -rf nvim-linux-x86_64.tar.gz && \
+    curl -LO https://github.com/tree-sitter/tree-sitter/releases/download/v0.25.6/tree-sitter-linux-x64.gz && \
+    gunzip tree-sitter-linux-x64.gz && \
+    chmod +x tree-sitter-linux-x64 && \
+    mv tree-sitter-linux-x64 /usr/bin/tree-sitter
 
 RUN apt-get clean
 USER $USERNAME
 WORKDIR /project
 CMD ["/bin/bash"]
-ARG BUILD_TYPE=Release
+ARG BUILD_TYPE=Debug
+
+# install neovim config and plugins for dev environment
+RUN git clone https://github.com/alexg-k/kickstart.nvim.git ~/.config/nvim
+RUN nvim --headless "+Lazy! sync" +qa
+RUN nvim --headless "+Lazy! update" +qa 
+RUN nvim --headless "+Lazy! install" +qa
+RUN nvim "+Lazy! install" +MasonToolsInstallSync +q!
+
